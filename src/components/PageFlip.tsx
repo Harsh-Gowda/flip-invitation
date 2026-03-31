@@ -3,6 +3,12 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 
+// Use local assets for page images (replaced from remote placeholders)
+import pageImage1 from '../../Asset/1.png';
+import pageImage2 from '../../Asset/2.png';
+import pageImage3 from '../../Asset/3.png';
+import pageImage4 from '../../Asset/4.png';
+
 interface PageProps {
   children: React.ReactNode;
   index: number;
@@ -88,19 +94,19 @@ export default function PageFlip() {
 
   const pages = [
     {
-      image: "https://images.unsplash.com/photo-1621252179027-94459d278660?q=80&w=1000&auto=format&fit=crop", // Ganesha/Traditional Cover
+      image: pageImage1, // local asset replacement for page 1
       bg: "bg-[#3d0303]"
     },
     {
-      image: "https://images.unsplash.com/photo-1607190074257-dd4b7af0309f?q=80&w=1000&auto=format&fit=crop", // Save the Date / Rings
+      image: pageImage2, // local asset replacement for page 2
       bg: "bg-[#3d0303]"
     },
     {
-      image: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=1000&auto=format&fit=crop", // Ceremonies / Flowers
+      image: pageImage3, // local asset replacement for page 3
       bg: "bg-[#3d0303]"
     },
     {
-      image: "https://images.unsplash.com/photo-1583939003579-730e3918a45a?q=80&w=1000&auto=format&fit=crop", // Main Invitation / Couple
+      image: pageImage4, // local asset replacement for page 4
       bg: "bg-[#3d0303]"
     }
   ];
