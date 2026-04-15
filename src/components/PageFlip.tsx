@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 
-// Use local assets for page images (replaced from remote placeholders)
+// Use local assets for page images
 import pageImage1 from '../../Asset/1.png';
 import pageImage2 from '../../Asset/2.png';
 import pageImage3 from '../../Asset/3.png';
@@ -17,9 +16,7 @@ interface PageProps {
 }
 
 const Page: React.FC<PageProps> = ({ children, index, currentIndex, total }) => {
-  const isCurrent = index === currentIndex;
   const isPast = index < currentIndex;
-  const isFuture = index > currentIndex;
 
   return (
     <motion.div
@@ -79,32 +76,19 @@ const Page: React.FC<PageProps> = ({ children, index, currentIndex, total }) => 
 
 export default function PageFlip() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showSwipeHint, setShowSwipeHint] = useState(true);
+  const [showHint, setShowHint] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Auto-hide swipe hint after 4 seconds
+  // Auto-hide hint after 5 seconds
   useEffect(() => {
-    const timer = setTimeout(() => setShowSwipeHint(false), 4000);
+    const timer = setTimeout(() => setShowHint(false), 5000);
     return () => clearTimeout(timer);
   }, []);
 
-
   const pages = [
-    {
-      image: pageImage1,
-      bg: "bg-[#3d0303]",
-      location: null,
-    },
-    {
-      image: pageImage2,
-      bg: "bg-[#3d0303]",
-      location: null,
-    },
-    {
-      image: pageImage3,
-      bg: "bg-[#3d0303]",
-      location: null,
-    },
+    { image: pageImage1, bg: "bg-[#3d0303]", location: null },
+    { image: pageImage2, bg: "bg-[#3d0303]", location: null },
+    { image: pageImage3, bg: "bg-[#3d0303]", location: null },
     {
       image: pageImage4,
       bg: "bg-[#3d0303]",
@@ -116,7 +100,6 @@ export default function PageFlip() {
     },
   ];
 
-
   const playSound = () => {
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
@@ -124,10 +107,8 @@ export default function PageFlip() {
     }
   };
 
-  const dismissHint = () => setShowSwipeHint(false);
-
   const next = () => {
-    dismissHint();
+    setShowHint(false);
     if (currentIndex < pages.length - 1) {
       setCurrentIndex(prev => prev + 1);
       playSound();
@@ -135,26 +116,11 @@ export default function PageFlip() {
   };
 
   const prev = () => {
-    dismissHint();
+    setShowHint(false);
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
       playSound();
     }
-  };
-
-  // Drag gestures
-  const x = useMotionValue(0);
-  const dragThreshold = 50;
-
-  const handleDragEnd = () => {
-    const currentX = x.get();
-    dismissHint();
-    if (currentX < -dragThreshold) {
-      next();
-    } else if (currentX > dragThreshold) {
-      prev();
-    }
-    animate(x, 0);
   };
 
   return (
@@ -166,17 +132,12 @@ export default function PageFlip() {
         preload="auto"
       />
 
-      {/* Invitation Container - Full screen on mobile, constrained on desktop */}
+      {/* Invitation Container */}
       <div className="relative overflow-hidden bg-[#1a1a1a]" style={{ height: '100%', maxHeight: '100vh', aspectRatio: '3/4', maxWidth: '100vw' }}>
-        {/* Main Container */}
+        
+        {/* Main Content */}
         <div className="relative w-full h-full perspective-1000">
-          <motion.div
-            className="relative w-full h-full"
-            style={{ x }}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            onDragEnd={handleDragEnd}
-          >
+          <div className="relative w-full h-full">
             {pages.map((page, index) => (
               <Page
                 key={index}
@@ -194,21 +155,21 @@ export default function PageFlip() {
                 </div>
               </Page>
             ))}
-          </motion.div>
+          </div>
 
-          {/* Invisible Tap Zones */}
+          {/* Interaction Zones */}
           <div className="absolute inset-0 flex z-40 pointer-events-none">
-            {/* Left Tap Zone (Backward) */}
+            {/* Left Zone - Navigate Back */}
             <div
-              className="w-1/2 h-full pointer-events-auto cursor-w-resize"
+              className="w-1/3 h-full pointer-events-auto cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 prev();
               }}
             />
-            {/* Right Tap Zone (Forward) */}
+            {/* Right Zone - Navigate Next */}
             <div
-              className="w-1/2 h-full pointer-events-auto cursor-e-resize"
+              className="w-2/3 h-full pointer-events-auto cursor-pointer"
               onClick={(e) => {
                 e.stopPropagation();
                 next();
@@ -216,139 +177,109 @@ export default function PageFlip() {
             />
           </div>
 
-          {/* Location Button Overlay */}
+          {/* Hint Overlay */}
+          <AnimatePresence>
+            {showHint && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-50 flex pointer-events-none items-center justify-center"
+              >
+                {/* Left Side Hint */}
+                <div className="flex-1 h-full flex items-center justify-center">
+                  {currentIndex > 0 && (
+                    <motion.div 
+                      animate={{ x: [0, -10, 0] }} 
+                      transition={{ repeat: Infinity, duration: 2 }}
+                      className="flex flex-col items-center gap-2"
+                    >
+                      <div className="w-12 h-12 rounded-full border border-white/20 bg-black/40 backdrop-blur-md flex items-center justify-center">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                          <path d="M15 18l-6-6 6-6" />
+                        </svg>
+                      </div>
+                      <span className="text-white/60 text-[10px] uppercase tracking-widest font-bold">Back</span>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* Right Side Hint */}
+                <div className="flex-1 h-full flex items-center justify-center">
+                  {currentIndex < pages.length - 1 && (
+                    <motion.div 
+                      animate={{ x: [0, 10, 0] }} 
+                      transition={{ repeat: Infinity, duration: 2 }}
+                      className="flex flex-col items-center gap-2"
+                    >
+                      <div className="w-14 h-14 rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/10 backdrop-blur-md flex items-center justify-center relative">
+                        <motion.div 
+                          className="absolute inset-0 rounded-full border border-[#D4AF37]"
+                          animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
+                          transition={{ repeat: Infinity, duration: 2 }}
+                        />
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="3">
+                          <path d="M9 18l6-6-6-6" />
+                        </svg>
+                      </div>
+                      <span className="text-[#D4AF37] text-[10px] uppercase tracking-widest font-bold drop-shadow-lg">Tap to Flip</span>
+                    </motion.div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Location Overlay */}
           <AnimatePresence mode="wait">
             {pages[currentIndex]?.location && (
               <motion.div
                 key={currentIndex}
-                initial={{ opacity: 0, y: 16 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-                className="absolute bottom-16 left-0 right-0 flex justify-center z-50 pointer-events-none"
+                className="absolute bottom-12 left-0 right-0 flex justify-center z-50 px-6"
               >
                 <a
                   href={pages[currentIndex].location!.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="pointer-events-auto flex items-center gap-2 px-4 py-2.5 rounded-full"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(30,8,8,0.82) 0%, rgba(80,20,10,0.82) 100%)',
-                    border: '1px solid rgba(212,175,55,0.55)',
-                    backdropFilter: 'blur(12px)',
-                    boxShadow: '0 0 18px rgba(212,175,55,0.25), 0 4px 20px rgba(0,0,0,0.5)',
-                    textDecoration: 'none',
-                  }}
+                  className="bg-black/80 backdrop-blur-xl border border-[#D4AF37]/40 px-5 py-3 rounded-2xl flex items-center gap-4 hover:border-[#D4AF37] transition-all"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Pulsing pin icon */}
-                  <span className="relative flex h-5 w-5 items-center justify-center">
-                    <motion.span
-                      className="absolute inline-flex h-full w-full rounded-full opacity-40"
-                      style={{ background: '#D4AF37' }}
-                      animate={{ scale: [1, 1.7, 1], opacity: [0.4, 0, 0.4] }}
-                      transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-                    />
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"
-                        fill="#D4AF37"
-                      />
+                  <div className="bg-[#D4AF37]/20 p-2 rounded-lg">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="#D4AF37">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" />
                     </svg>
-                  </span>
-
-                  <div className="flex flex-col leading-tight">
-                    <span className="text-[10px] uppercase tracking-widest" style={{ color: '#D4AF37', fontWeight: 600 }}>
-                      {pages[currentIndex].location!.label}
-                    </span>
-                    <span className="text-[9px] text-white/60 truncate max-w-[160px]">
-                      {pages[currentIndex].location!.venue}
-                    </span>
                   </div>
-
-                  {/* External link arrow */}
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: 2, opacity: 0.5 }}>
-                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[#D4AF37] text-[11px] font-bold uppercase tracking-wider">{pages[currentIndex].location!.label}</span>
+                    <span className="text-white/60 text-[10px] truncate max-w-[200px]">{pages[currentIndex].location!.venue}</span>
+                  </div>
                 </a>
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
 
-
-        {/* Animated Swipe Hint Overlay */}
-        <AnimatePresence>
-          {showSwipeHint && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={{ duration: 0.5 }}
-              className="absolute inset-0 z-50 flex flex-col items-center justify-end pb-20 pointer-events-none"
-            >
-              {/* Dark gradient at bottom */}
-              <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-black/70 to-transparent" />
-
-              <div className="relative flex flex-col items-center gap-3">
-                {/* Swipe arrow animation */}
-                <motion.div
-                  className="flex items-center gap-1"
-                  animate={{ x: [0, 18, 0] }}
-                  transition={{ repeat: Infinity, duration: 1.4, ease: 'easeInOut' }}
-                >
-                  {/* Hand / finger icon */}
-                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <text x="0" y="26" fontSize="26" fill="white" style={{ filter: 'drop-shadow(0 0 6px rgba(255,200,100,0.8))' }}>👆</text>
-                  </svg>
-                  {/* Arrow */}
-                  <svg width="36" height="20" viewBox="0 0 36 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M2 10 H30 M22 2 L30 10 L22 18" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </motion.div>
-
-                {/* Hint text */}
-                <motion.p
-                  className="text-white text-sm font-semibold uppercase tracking-widest"
-                  style={{ textShadow: '0 0 12px rgba(255,200,80,0.9), 0 2px 4px rgba(0,0,0,0.8)' }}
-                  animate={{ opacity: [0.7, 1, 0.7] }}
-                  transition={{ repeat: Infinity, duration: 1.8, ease: 'easeInOut' }}
-                >
-                  Swipe to next page
-                </motion.p>
-
-                {/* Dots progress indicator */}
-                <div className="flex gap-2 mt-1">
-                  {pages.map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-1.5 h-1.5 rounded-full transition-all duration-300"
-                      style={{
-                        background: i === currentIndex ? '#FFD700' : 'rgba(255,255,255,0.3)',
-                        transform: i === currentIndex ? 'scale(1.4)' : 'scale(1)',
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Instructions */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/30 text-[9px] uppercase tracking-[0.3em] pointer-events-none">
-          Tap or Swipe
+          {/* Footer Navigation Dots */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2.5 z-50 items-center">
+            {pages.map((_, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "h-1.5 rounded-full transition-all duration-500",
+                  i === currentIndex ? "w-6 bg-[#D4AF37]" : "w-1.5 bg-white/20"
+                )}
+              />
+            ))}
+          </div>
         </div>
       </div>
 
       <style dangerouslySetInnerHTML={{
         __html: `
-        .perspective-1000 {
-          perspective: 1000px;
-        }
-        .preserve-3d {
-          transform-style: preserve-3d;
-        }
+        .perspective-1000 { perspective: 1000px; }
+        .preserve-3d { transform-style: preserve-3d; }
       `}} />
     </div>
   );
