@@ -77,6 +77,7 @@ const Page: React.FC<PageProps> = ({ children, index, currentIndex, total }) => 
 export default function PageFlip() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showHint, setShowHint] = useState(true);
+  const [showOverview, setShowOverview] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // Auto-hide hint after 5 seconds
@@ -257,6 +258,133 @@ export default function PageFlip() {
                     <span className="text-white/60 text-[10px] truncate max-w-[200px]">{pages[currentIndex].location!.venue}</span>
                   </div>
                 </a>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Instructions */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/30 text-[9px] uppercase tracking-[0.3em] pointer-events-none">
+            Tap or Swipe
+          </div>
+
+          {/* All Pages Overview Button */}
+          <motion.button
+            className="absolute bottom-4 right-4 z-50 flex items-center justify-center w-9 h-9 rounded-full"
+            style={{
+              background: 'linear-gradient(135deg, rgba(30,8,8,0.85) 0%, rgba(80,20,10,0.85) 100%)',
+              border: '1px solid rgba(212,175,55,0.5)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 0 14px rgba(212,175,55,0.2), 0 4px 16px rgba(0,0,0,0.5)',
+            }}
+            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.08, boxShadow: '0 0 20px rgba(212,175,55,0.4)' }}
+            onClick={(e) => { e.stopPropagation(); setShowOverview(true); }}
+            title="Show all pages"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" fill="#D4AF37" opacity="0.9"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5" fill="#D4AF37" opacity="0.9"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5" fill="#D4AF37" opacity="0.9"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5" fill="#D4AF37" opacity="0.9"/>
+            </svg>
+          </motion.button>
+
+          {/* All Pages Overview Modal */}
+          <AnimatePresence>
+            {showOverview && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="absolute inset-0 z-[60] flex flex-col"
+                style={{
+                  background: 'rgba(8,2,2,0.92)',
+                  backdropFilter: 'blur(18px)',
+                }}
+                onClick={() => setShowOverview(false)}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-5 pb-3">
+                  <span
+                    className="text-xs uppercase tracking-widest font-semibold"
+                    style={{ color: '#D4AF37', letterSpacing: '0.25em' }}
+                  >
+                    All Pages
+                  </span>
+                  <motion.button
+                    className="flex items-center justify-center w-7 h-7 rounded-full"
+                    style={{ border: '1px solid rgba(212,175,55,0.3)', background: 'rgba(255,255,255,0.04)' }}
+                    whileTap={{ scale: 0.85 }}
+                    onClick={(e) => { e.stopPropagation(); setShowOverview(false); }}
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="#D4AF37" strokeWidth="2.5" strokeLinecap="round"/>
+                    </svg>
+                  </motion.button>
+                </div>
+
+                {/* Thumbnails Grid */}
+                <div
+                  className="flex-1 grid gap-3 px-4 pb-6 content-start"
+                  style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {pages.map((page, i) => (
+                    <motion.button
+                      key={i}
+                      initial={{ opacity: 0, scale: 0.88, y: 12 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ delay: i * 0.07, duration: 0.3, ease: 'easeOut' }}
+                      className="relative rounded-xl overflow-hidden flex flex-col items-center"
+                      style={{
+                        border: i === currentIndex
+                          ? '2px solid #D4AF37'
+                          : '2px solid rgba(255,255,255,0.08)',
+                        boxShadow: i === currentIndex
+                          ? '0 0 16px rgba(212,175,55,0.35)'
+                          : '0 2px 10px rgba(0,0,0,0.4)',
+                        aspectRatio: '3/4',
+                        background: '#1a0404',
+                      }}
+                      whileTap={{ scale: 0.96 }}
+                      onClick={() => {
+                        setCurrentIndex(i);
+                        playSound();
+                        setShowOverview(false);
+                      }}
+                    >
+                      <img
+                        src={page.image}
+                        alt={`Page ${i + 1}`}
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
+                      {/* Page number badge */}
+                      <div
+                        className="absolute bottom-1.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-widest"
+                        style={{
+                          background: i === currentIndex ? '#D4AF37' : 'rgba(0,0,0,0.55)',
+                          color: i === currentIndex ? '#1a0404' : 'rgba(255,255,255,0.7)',
+                          backdropFilter: 'blur(6px)',
+                        }}
+                      >
+                        {i + 1}
+                      </div>
+                      {/* Active checkmark */}
+                      {i === currentIndex && (
+                        <div
+                          className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center"
+                          style={{ background: '#D4AF37' }}
+                        >
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                            <path d="M5 13l4 4L19 7" stroke="#1a0404" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        </div>
+                      )}
+                    </motion.button>
+                  ))}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
